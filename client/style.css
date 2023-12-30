@@ -1,0 +1,53 @@
+#container {
+    background-color: #757efc;
+    width: 50%;
+    height: auto;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+#title {
+    width: 100%;
+    font-size: 45px;
+}
+
+#subtitle {
+    width: 100%;
+}
+
+#register-form {
+    width: 100%;
+}
+
+.data-container {
+    width: 100%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.data-label {
+    font-size: 20px;
+}
+
+.data-box {
+    border-radius: 4px;
+}
+
+#button-container {
+    margin: 10px;
+}
+
+button {
+    background-color: rgb(186, 196, 206);
+    width: auto;
+    height: 40px;
+    font-size: 15px;
+    border-radius: 4px;
+}
+
+#link-container {
+    margin: 15px;
+}

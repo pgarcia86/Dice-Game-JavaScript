@@ -33,7 +33,7 @@ const Auth = {
                 const passwordMatch = await bcrypt.compare(body.password, user.password)
                 if(passwordMatch){
                     const signed = signToken(user._id)
-                    res.status(200).send(signed)
+                    res.status(200).send(user)
                 } else {
                     res.status(401).send('El usuario o la contraseña no son válidos')
                 }
@@ -53,7 +53,7 @@ const Auth = {
                 console.log('Creo usuario nuevo');
                 const salt = await bcrypt.genSalt()
                 const hashed = await bcrypt.hash(body.password, salt)
-                const user = await Users.create({email: body.email, password: hashed, salt, successRate: 0})
+                const user = await Users.create({email: body.email, password: hashed, games: [], successRate: 0, salt})
                 const signed = signToken(user._id)
                 res.send(signed)
             }
