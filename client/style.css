@@ -36,16 +36,18 @@
     border-radius: 4px;
 }
 
-#button-container {
-    margin: 10px;
-}
-
 button {
     background-color: rgb(186, 196, 206);
+    margin-top: 15px;
+    margin-bottom: 15px;
     width: auto;
     height: 40px;
     font-size: 15px;
     border-radius: 4px;
+}
+
+#result {
+    margin-bottom: 15px;
 }
 
 #link-container {

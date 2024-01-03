@@ -23,6 +23,7 @@ const findAndAssignUser = async (req, res, next) => {
 const isAuthenticated = express.Router().use(validateJwt, findAndAssignUser)
 
 const Auth = {
+    //Devuelvo el token y el usuario, para poder usarlos en otras partes
     login: async (req, res) => {
         const {body} = req
         try{
@@ -33,7 +34,7 @@ const Auth = {
                 const passwordMatch = await bcrypt.compare(body.password, user.password)
                 if(passwordMatch){
                     const signed = signToken(user._id)
-                    res.status(200).send(user)
+                    res.status(200).json({signed, user: user})
                 } else {
                     res.status(401).send('El usuario o la contraseña no son válidos')
                 }
@@ -60,7 +61,7 @@ const Auth = {
         } catch (error) {
                 res.status(500).send(error.message)
         }
-    }
+    },
 }
 
 module.exports = {Auth, isAuthenticated}

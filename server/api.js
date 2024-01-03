@@ -20,7 +20,9 @@ app.get('/', (req, res) => {
 })
 app.post('/login', Auth.login)
 app.post('/register', Auth.register)
-app.post('/play', user.playGame)
+app.post('/play',isAuthenticated, user.playGame)
+app.get('/getPlayer/:userId',isAuthenticated, user.getPlayer)
+app.get('/getAllPlayersStats',isAuthenticated, user.getAllPlayersStats)
 
 app.get('*', (req, res) =>{
     res.status(404).send('Esta pagina no existe')

@@ -79,6 +79,17 @@ const loadPlayTemplate = () => {
                 <button id="play-button" type="submit">Jugar</button>
             </div>
             <div id="result"></div>
+            <div>
+                <button id="get-player-stats" type="submit">Mis estadisticas</button>
+            </div>
+            <div id="player-stats"></div>
+            <div>
+                <button id="get-all-players-stats" type="submit">Estadisticas de todos</button>
+            </div>
+            <div id="all-players-stats"></div>
+            <div>
+                <button id="logout" type="submit">Logout</button>
+            </div>
         </div>
     `
     const body = document.getElementsByTagName('body')[0]
@@ -87,19 +98,35 @@ const loadPlayTemplate = () => {
 
 const addPlayListener = () => {
     const playForm = document.getElementById('play-button')
-    playForm.onclick = async (e) => {
-        const user = localStorage.getItem('user')
-        console.log("Linea 92 - main.js: ", user);
+    playForm.onclick = (e) => {
         e.preventDefault()
-        let win = false
-        let state = "Perdiste"
-        const num1 = Math.floor(Math.random() * 6) + 1
-        const num2 = Math.floor(Math.random() * 6) + 1
-        if((num1 + num2) == 7){
-            win = true
-            state = 'Ganaste'
+        addLogoutListener() 
+        addPlayerStatsListener()
+        addAllPlayerStatsListener()
+        goToPlay(localStorage.getItem('user'))      
+    }
+}
+
+const goToPlay = async (token) => {
+    const response = await fetch('/play', {
+        method: 'POST',
+        body: userString,
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('jwt')
         }
-        const template = `
+    })
+    const responseData = await response.text()
+    const data = JSON.parse(responseData)
+    const num1 = data.games[data.games.length - 1].first
+    const num2 = data.games[data.games.length - 1].second
+    let state = ""
+    if(data.games[data.games.length - 1].win){
+        state = 'Ganaste'
+    } else {
+        state = "Perdiste"
+    }
+    const template = `
         <div>
             Primero : ${num1} 
         </div>
@@ -109,28 +136,106 @@ const addPlayListener = () => {
         <div>
             ${state}
         </div>
-        `
+        <div>
+            Ganaste un ${data.successRate}% de las partidas
+        </div
+            `
         const resultDiv = document.getElementById('result')
-        resultDiv.innerHTML = template        
-        const data = {
-            first: num1,
-            second: num2,
-            win: win
-        }
+        resultDiv.innerHTML = template 
+        const playerStats = document.getElementById('player-stats')
+        playerStats.innerHTML = ``
+        const allPlayersStats = document.getElementById('all-players-stats')
+        allPlayersStats.innerHTML = ``
+    if(response.status > 300){
+        const errorNode = document.getElementById('error')
+        errorNode.innerHTML = responseData
+    } 
+}
 
-        const response = await fetch('/play', {
-            method: 'POST',
-            body: JSON.stringify(data),
+
+const addPlayerStatsListener = () => {
+    const statsButton = document.getElementById('get-player-stats')
+    userString = localStorage.getItem('user')
+    const user = JSON.parse(userString)
+    const userId = user._id;
+    statsButton.onclick = async (e) => {
+        e.preventDefault()
+        const response = await fetch(`/getPlayer/${userId}`, {
+            method: 'GET',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('jwt')
             }
         })
-        const responseData = await response.text()
-        if(response.status > 300){
-            const errorNode = document.getElementById('error')
-            errorNode.innerHTML = responseData
-        } 
+        const user = await response.json()
+        const template = `
+        <div>
+            Jugaste: ${user.games.length} veces 
+        </div>
+        <div>
+            Ganaste: ${user.games.filter(game => game.win).length} veces
+        </div>
+        <div>
+            Perdiste: ${user.games.length - user.games.filter(game => game.win).length} veces
+        </div>
+        <div>
+            Ganaste un ${user.successRate}% de las partidas
+        </div
+        `
+        const playerStats = document.getElementById('player-stats')
+        playerStats.innerHTML = template
+        const gameStats = document.getElementById('result')
+        gameStats.innerHTML = ``
+        const allPlayersStats = document.getElementById('all-players-stats')
+        allPlayersStats.innerHTML = ``
     }
+}
+
+const addAllPlayerStatsListener = () => {
+    const allStatsButton = document.getElementById('get-all-players-stats')
+    allStatsButton.onclick = async (e) => {
+        e.preventDefault()
+        const response = await fetch('/getAllPlayersStats', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': localStorage.getItem('jwt')
+            }
+        })
+        const users = await response.json()   
+        const template = user => `
+        <li>
+            ${user.email} - Porcentaje de victorias: ${user.successRate}
+        </li>
+        `
+    const usersList = document.getElementById('all-players-stats')
+    usersList.innerHTML = users.map(user => template(user)).join('')
+    const playerStats = document.getElementById('player-stats')
+    playerStats.innerHTML = ``
+    const gameStats = document.getElementById('result')
+    gameStats.innerHTML = ``
+    }
+}
+
+const addLogoutListener = () => {
+    const logout = document.getElementById('logout')
+    logout.onclick = (e) =>{
+        e.preventDefault()
+        localStorage.setItem('user', '')
+        localStorage.setItem('jwt', '')
+        loadLogoutTemplate(() => loginPage())
+    }    
+}
+
+const loadLogoutTemplate = (callback) => {
+        const template = `
+        <div id="container">
+            <h1 id=title">GRACIAS POR JUGAR, HASTA LA PROXIMA</h1>
+        </div>
+    `
+    const body = document.getElementsByTagName('body')[0]
+    body.innerHTML = template
+    setTimeout(callback, 3000)
 }
 
 //Aqui chequeo si el usuario esta loguedo
@@ -152,13 +257,13 @@ const authListener = action => () =>{
                 'Content-Type': 'application/json'
             }
         })
-        const responseData = await response.text()
-        console.log('RESPONSE', responseData);
+        const responseData = await response.json()
         if(response.status > 300){
             const errorNode = document.getElementById('error')
             errorNode.innerHTML = responseData
         } else {
-            localStorage.setItem('user', responseData)
+            localStorage.setItem('jwt', `Bearer ${responseData.signed}`)
+            localStorage.setItem('user', JSON.stringify(responseData.user))
             if(action == 'register'){
                 loadWelcomeTemplate(() => {
                     loginPage()
@@ -167,6 +272,9 @@ const authListener = action => () =>{
             else {
                 loadPlayTemplate()
                 addPlayListener()
+                addLogoutListener()
+                addPlayerStatsListener()
+                addAllPlayerStatsListener()
             }
         }        
     }
@@ -208,6 +316,9 @@ window.onload = () => {
     if(isLoggedIn){
         loadPlayTemplate()
         addPlayListener()
+        addLogoutListener() 
+        addPlayerStatsListener()
+        addAllPlayerStatsListener()
     } else {
         loginPage()
     }        
