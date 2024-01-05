@@ -85,8 +85,9 @@ const loadPlayTemplate = () => {
             <div id="player-stats"></div>
             <div>
                 <button id="get-all-players-stats" type="submit">Estadisticas de todos</button>
+                <div id="all-players-stats-container">           
+                </div>
             </div>
-            <div id="all-players-stats"></div>
             <div>
                 <button id="logout" type="submit">Logout</button>
             </div>
@@ -96,6 +97,7 @@ const loadPlayTemplate = () => {
     body.innerHTML = template
 }
 
+//Aqui agrego un Listener para el evento de hacer click en el boton
 const addPlayListener = () => {
     const playForm = document.getElementById('play-button')
     playForm.onclick = (e) => {
@@ -107,7 +109,9 @@ const addPlayListener = () => {
     }
 }
 
-const goToPlay = async (token) => {
+//Aqui juega y guarda el resultado en la Base de datos
+const goToPlay = async () => {
+    //Hace fetch con el endpoint de /play
     const response = await fetch('/play', {
         method: 'POST',
         body: userString,
@@ -118,33 +122,33 @@ const goToPlay = async (token) => {
     })
     const responseData = await response.text()
     const data = JSON.parse(responseData)
-    const num1 = data.games[data.games.length - 1].first
-    const num2 = data.games[data.games.length - 1].second
     let state = ""
     if(data.games[data.games.length - 1].win){
         state = 'Ganaste'
     } else {
         state = "Perdiste"
     }
+
+    //Muestro el resultado por pantalla
     const template = `
-        <div>
-            Primero : ${num1} 
-        </div>
-        <div>
-            Segundo: ${num2}
-        </div>
-        <div>
-            ${state}
-        </div>
-        <div>
-            Ganaste un ${data.successRate}% de las partidas
-        </div
-            `
+    <ul id="player-stats-list">
+        <li class="player-stats-item">Primer dado</li>
+        <li class="player-stats-item">${data.games[data.games.length - 1].first}</li>
+        <li class="player-stats-item">Segundo dado</li>
+        <li class="player-stats-item">${data.games[data.games.length - 1].second}</li>
+        <li class="player-stats-item"></li>
+        <li class="player-stats-item">${state}</li>
+        <li class="player-stats-item">Porcentaje de victorias</li>
+        <li class="player-stats-item">${data.successRate}%</li>
+    </ul>
+    <div>
+    </div>
+    `
         const resultDiv = document.getElementById('result')
         resultDiv.innerHTML = template 
         const playerStats = document.getElementById('player-stats')
         playerStats.innerHTML = ``
-        const allPlayersStats = document.getElementById('all-players-stats')
+        const allPlayersStats = document.getElementById('all-players-stats-container')
         allPlayersStats.innerHTML = ``
     if(response.status > 300){
         const errorNode = document.getElementById('error')
@@ -152,7 +156,7 @@ const goToPlay = async (token) => {
     } 
 }
 
-
+//Muestro por pantalla las estadisticas del jugador
 const addPlayerStatsListener = () => {
     const statsButton = document.getElementById('get-player-stats')
     userString = localStorage.getItem('user')
@@ -169,31 +173,50 @@ const addPlayerStatsListener = () => {
         })
         const user = await response.json()
         const template = `
-        <div>
-            Jugaste: ${user.games.length} veces 
-        </div>
-        <div>
-            Ganaste: ${user.games.filter(game => game.win).length} veces
-        </div>
-        <div>
-            Perdiste: ${user.games.length - user.games.filter(game => game.win).length} veces
-        </div>
-        <div>
-            Ganaste un ${user.successRate}% de las partidas
-        </div
+        <ul id="player-stats-list">
+            <li class="player-stats-item">Jugaste</li>
+            <li class="player-stats-item">${user.games.length}</li>
+            <li class="player-stats-item">Ganaste</li>
+            <li class="player-stats-item">${user.games.filter(game => game.win).length}</li>
+            <li class="player-stats-item">Perdiste</li>
+            <li class="player-stats-item">${user.games.length - user.games.filter(game => game.win).length}</li>
+            <li class="player-stats-item">Porcentaje de victorias</li>
+            <li class="player-stats-item">${user.successRate}%</li>
+        </ul>
+        <button data-id="${user._id}">Reiniciar mis estadisticas</button>
         `
         const playerStats = document.getElementById('player-stats')
         playerStats.innerHTML = template
         const gameStats = document.getElementById('result')
         gameStats.innerHTML = ``
-        const allPlayersStats = document.getElementById('all-players-stats')
+        const allPlayersStats = document.getElementById('all-players-stats-container')
         allPlayersStats.innerHTML = ``
+        const deleteButton = document.querySelector(`[data-id="${userId}"]`)
+        deleteButton.onclick = async del => {
+            await fetch(`/player/${userId}`, {
+                method: 'POST',
+                headers: {
+                    Authorization: localStorage.getItem('jwt')
+                }
+            })
+            alert('Se reiniciaron tus estadisticas')
+        }
     }
 }
 
+//Muestro por pantalla las estadisticas de todos los jugadores
 const addAllPlayerStatsListener = () => {
     const allStatsButton = document.getElementById('get-all-players-stats')
+    const playersStatsContainer = document.getElementById('all-players-stats-container');
+    const tableTemplate = `
+        <ul id="all-players-stats-menu"> 
+            <li class="all-players-stats-menu-items">Jugador</li>
+            <li class="all-players-stats-menu-items">Porcentaje de victorias</li>
+        </ul>
+        <ul id="all-players-stats-list"></ul>
+    `
     allStatsButton.onclick = async (e) => {
+        playersStatsContainer.innerHTML = tableTemplate
         e.preventDefault()
         const response = await fetch('/getAllPlayersStats', {
             method: 'GET',
@@ -204,11 +227,14 @@ const addAllPlayerStatsListener = () => {
         })
         const users = await response.json()   
         const template = user => `
-        <li>
-            ${user.email} - Porcentaje de victorias: ${user.successRate}
+        <li class="all-players-stats-list-items">
+            ${user.email}
+        </li>
+        <li class="all-players-stats-list-items">
+            ${user.successRate}%
         </li>
         `
-    const usersList = document.getElementById('all-players-stats')
+    const usersList = document.getElementById('all-players-stats-list')
     usersList.innerHTML = users.map(user => template(user)).join('')
     const playerStats = document.getElementById('player-stats')
     playerStats.innerHTML = ``
@@ -217,6 +243,7 @@ const addAllPlayerStatsListener = () => {
     }
 }
 
+//Añado el Listener para hacer el logout, elimino lo que esta guardado en el localStorage
 const addLogoutListener = () => {
     const logout = document.getElementById('logout')
     logout.onclick = (e) =>{
@@ -226,6 +253,7 @@ const addLogoutListener = () => {
         loadLogoutTemplate(() => loginPage())
     }    
 }
+
 
 const loadLogoutTemplate = (callback) => {
         const template = `
@@ -254,14 +282,15 @@ const authListener = action => () =>{
             method: 'POST',
             body: JSON.stringify(data),
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             }
         })
-        const responseData = await response.json()
-        if(response.status > 300){
+        if(!response.ok){
+            const errorData = await response.json()
             const errorNode = document.getElementById('error')
-            errorNode.innerHTML = responseData
+            errorNode.innerHTML = errorData.message
         } else {
+            const responseData = await response.json();
             localStorage.setItem('jwt', `Bearer ${responseData.signed}`)
             localStorage.setItem('user', JSON.stringify(responseData.user))
             if(action == 'register'){
@@ -276,8 +305,8 @@ const authListener = action => () =>{
                 addPlayerStatsListener()
                 addAllPlayerStatsListener()
             }
-        }        
-    }
+        }
+    }        
 }
 
 const addRegisterListener = authListener('register')

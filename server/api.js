@@ -6,7 +6,7 @@ dotenv.config()
 const path = require('path')
 const user = require('./controllers/user.controller')
 
-const port = 3000
+const port = 5000
 const {Auth, isAuthenticated} = require('./controllers/auth.controller')
 
 const app = express()
@@ -23,6 +23,7 @@ app.post('/register', Auth.register)
 app.post('/play',isAuthenticated, user.playGame)
 app.get('/getPlayer/:userId',isAuthenticated, user.getPlayer)
 app.get('/getAllPlayersStats',isAuthenticated, user.getAllPlayersStats)
+app.post('/player/:userId', isAuthenticated, user.deleteStats)
 
 app.get('*', (req, res) =>{
     res.status(404).send('Esta pagina no existe')

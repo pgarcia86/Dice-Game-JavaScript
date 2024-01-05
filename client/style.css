@@ -53,3 +53,51 @@ button {
 #link-container {
     margin: 15px;
 }
+
+#all-players-stats-container {
+    text-align: center;
+}
+
+#all-players-stats-menu {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    list-style-type: none;
+}
+
+.all-players-stats-menu-items {
+    width: 50%;
+    box-sizing: border-box;
+}
+
+#all-players-stats-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    list-style-type: none;
+}
+
+.all-players-stats-list-items {
+    width: 50%;
+    box-sizing: border-box;
+}
+
+#player-stats{
+    margin-left: 150px;
+    margin-right: 150px;
+}
+
+#player-stats-list {  
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0;
+    list-style-type: none;
+    margin: 0;
+}
+
+.player-stats-item {
+    width: 50%;
+    box-sizing: border-box;
+    text-align: center;
+}

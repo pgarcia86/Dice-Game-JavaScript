@@ -54,6 +54,22 @@ const User = {
         } catch(error){
             res.status(500).send(error.message)
         }
+    },
+    deleteStats: async (req, res) => {
+        try{
+            const {userId} = req.params
+            const user = await Users.findOne({_id : userId})
+            if(user){
+                user.games = []
+                user.successRate = 0
+                await user.save()
+                res.status(200).send(user)
+            } else {
+                res.status(404).send('No se encontro el usuario')
+            }
+        }catch (error) {
+            res.status(500).send(error.message)
+        }
     }
 }
 

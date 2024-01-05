@@ -11,6 +11,7 @@ const findAndAssignUser = async (req, res, next) => {
     try{
         const user = await Users.findById(req.auth._id)
         if(!user){
+            console.log("LINEA 14 - AUTH.CONTROLLER");
             return res.status(401).end()
         }
         req.user = user
@@ -29,17 +30,17 @@ const Auth = {
         try{
             const user = await Users.findOne({email: body.email})
             if(!user){
-                res.status(401).send('El usuario o contraseña no son válidos')
+                console.log('Esta aca - auth.controler.js');
+                res.status(401).json({message: 'El usuario o contraseña no son válidos'})
             } else {
                 const passwordMatch = await bcrypt.compare(body.password, user.password)
                 if(passwordMatch){
                     const signed = signToken(user._id)
                     res.status(200).json({signed, user: user})
                 } else {
-                    res.status(401).send('El usuario o la contraseña no son válidos')
+                    res.status(401).json({message: 'El usuario o la contraseña no son válidos' })
                 }
             }
-
         } catch (error) {
             res.status(500).send(error.message)
         }
@@ -49,14 +50,14 @@ const Auth = {
         try{
             const isUser = await Users.findOne({email: body.email})
             if(isUser){
-                res.status(409).send('El usuario ya existe, no se puede dar de alta')
+                res.status(409).json({message: 'El usuario ya existe, no se puede dar de alta'})
             } else{
                 console.log('Creo usuario nuevo');
                 const salt = await bcrypt.genSalt()
                 const hashed = await bcrypt.hash(body.password, salt)
                 const user = await Users.create({email: body.email, password: hashed, games: [], successRate: 0, salt})
                 const signed = signToken(user._id)
-                res.send(signed)
+                res.status(201).json({signed, user: user})
             }
         } catch (error) {
                 res.status(500).send(error.message)
